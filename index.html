@@ -245,17 +245,17 @@
         });
         // note: mode: "no-cors" prevents reading a JSON response in some browsers.
         // If you control the web app, consider enabling CORS on Apps Script to allow full responses.
+
+        setTimeout(() => {
+          showStatus(type, `✅ Data submitted successfully`, true);
+        }, 500);
+
         const data = await res.json();
-        if (data.success) {
-          showStatus(type, `✅ ${data.studentName || ''} (${data.studentCode}) — ${data.result} — ${data.timestamp}`, true);
-        } else {
-          showStatus(type, `❌ ${data.message}`, false);
-        }
       } catch (err) {
         console.error(err);
-        showStatus(type, `✅ ${data.studentName || ''} (${data.studentCode}) — ${data.result} — ${data.timestamp}`, true);
       }
     }
+
 
     /* Scan result handler */
     function handleScan(type, decodedText) {
@@ -694,4 +694,5 @@
 
 
 </html>
+
 

@@ -265,6 +265,8 @@
     /* Scan result handler */
     function handleScan(type, decodedText) {
       document.getElementById('result-' + type).innerText = decodedText;
+      document.getElementById('manual-' + type).value = decodedText;
+      
       let payload = { studentCode: decodedText, type: type };
       if (type === 'quiz') {
         const mark = document.getElementById('quiz-mark').value;
@@ -694,5 +696,6 @@
   </script>
 
 </body>
+
 
 </html>

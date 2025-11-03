@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QR Attendance / Assignment / Quiz</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- html5-qrcode -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    /* small helper to hide scanner containers when not active */
+    .hidden-scanner {
+      display: none;
+    }
+
+    /* make long option text not wrap inside select on some browsers */
+    select option {
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-3xl bg-white shadow-2xl rounded-2xl p-5">
+
+    <h1 class="text-2xl font-bold text-indigo-700 mb-4">QR: Attendance • Assignment • Quiz</h1>
+
+    <!-- Tabs (responsive: stacked on small screens, row on sm+) -->
+    <div class="mb-4">
+      <nav class="flex flex-col sm:flex-row gap-2">
+        <button data-tab="attendance"
+          class="tab-btn w-full sm:w-auto px-4 py-2 rounded-md bg-indigo-600 text-white text-center text-sm sm:text-base">Attendance</button>
+        <button data-tab="assignment"
+          class="tab-btn w-full sm:w-auto px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-center text-sm sm:text-base">Assignment</button>
+        <button data-tab="quiz"
+          class="tab-btn w-full sm:w-auto px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-center text-sm sm:text-base">Quiz</button>
+        <button data-tab="student-details"
+          class="tab-btn w-full sm:w-auto px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-center text-sm sm:text-base">Student
+          Details</button>
+
+      </nav>
+    </div>
+
+    <!-- Tab contents -->
+    <div id="tabs">
+
+      <!-- Attendance -->
+      <section id="attendance" class="tab-content">
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <div id="reader-attendance" class="rounded-lg border border-gray-300 overflow-hidden"></div>
+            <div class="mt-2 flex items-center gap-2">
+              <label class="text-sm text-gray-600">Camera:</label>
+              <select id="camera-select-attendance"
+                class="px-2 py-1 border rounded-md min-w-0 w-full sm:w-auto"></select>
+            </div>
+            <p class="mt-2 text-sm text-gray-500">Scanner (automatically submit on scan)</p>
+          </div>
+
+          <div>
+            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+              <p class="text-sm text-gray-600">Scanned Code:</p>
+              <p id="result-attendance" class="font-semibold text-indigo-700 text-lg">None</p>
+              <div class="mt-3">
+                <input id="manual-attendance" type="text" placeholder="Enter code manually"
+                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                <div class="flex gap-2 mt-3">
+                  <button id="submit-manual-attendance"
+                    class="flex-1 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Submit</button>
+                  <button id="clear-attendance"
+                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Clear</button>
+                </div>
+              </div>
+              <p id="status-attendance" class="mt-3 text-sm text-gray-600"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Assignment -->
+      <section id="assignment" class="tab-content hidden hidden-scanner">
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <div id="reader-assignment" class="rounded-lg border border-gray-300 overflow-hidden"></div>
+            <div class="mt-2 flex items-center gap-2">
+              <label class="text-sm text-gray-600">Camera:</label>
+              <select id="camera-select-assignment"
+                class="px-2 py-1 border rounded-md min-w-0 w-full sm:w-auto"></select>
+            </div>
+            <p class="mt-2 text-sm text-gray-500">Scanner (automatically submit on scan)</p>
+          </div>
+
+          <div>
+            <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+              <p class="text-sm text-gray-600">Scanned Code:</p>
+              <p id="result-assignment" class="font-semibold text-green-700 text-lg">None</p>
+              <div class="mt-3">
+                <input id="manual-assignment" type="text" placeholder="Enter code manually"
+                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400" />
+                <div class="flex gap-2 mt-3">
+                  <button id="submit-manual-assignment"
+                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Submit</button>
+                  <button id="clear-assignment"
+                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Clear</button>
+                </div>
+              </div>
+              <p id="status-assignment" class="mt-3 text-sm text-gray-600"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quiz -->
+      <section id="quiz" class="tab-content hidden hidden-scanner">
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <div id="reader-quiz" class="rounded-lg border border-gray-300 overflow-hidden"></div>
+            <div class="mt-2 flex items-center gap-2">
+              <label class="text-sm text-gray-600">Camera:</label>
+              <select id="camera-select-quiz" class="px-2 py-1 border rounded-md min-w-0 w-full sm:w-auto"></select>
+            </div>
+            <p class="mt-2 text-sm text-gray-500">Scanner (automatically submit on scan)</p>
+          </div>
+
+          <div>
+            <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+              <p class="text-sm text-gray-600">Scanned Code:</p>
+              <p id="result-quiz" class="font-semibold text-yellow-700 text-lg">None</p>
+
+              <div class="mt-3 space-y-2">
+                <input id="manual-quiz" type="text" placeholder="Enter student code manually"
+                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+
+                <input id="quiz-mark" type="number" placeholder="Enter quiz mark (0-100)"
+                  class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+
+                <div class="flex gap-2">
+                  <button id="submit-manual-quiz"
+                    class="flex-1 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700">Submit</button>
+                  <button id="clear-quiz"
+                    class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Clear</button>
+                </div>
+              </div>
+
+              <p id="status-quiz" class="mt-3 text-sm text-gray-600"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Student Details -->
+      <section id="student-details" class="tab-content hidden hidden-scanner">
+        <div class="space-y-4">
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <h2 class="text-lg font-semibold text-blue-700 mb-3">Student Lookup</h2>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input id="student-search" type="text" placeholder="Enter student name or ID..."
+                class="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+              <button id="search-student"
+                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Search</button>
+            </div>
+            <p id="status-student" class="mt-2 text-sm text-gray-600"></p>
+          </div>
+
+          <!-- Student Info -->
+          <div id="student-info" class="bg-white border border-gray-200 shadow-md rounded-xl p-4 hidden">
+            <h3 class="text-lg font-semibold text-indigo-700 mb-2">Student Info</h3>
+            <div class="grid md:grid-cols-2 gap-2 text-sm">
+              <p><strong>Name:</strong> <span id="info-name"></span></p>
+              <p><strong>ID:</strong> <span id="info-id"></span></p>
+              <p><strong>Parent Number:</strong> <span id="info-parent"></span></p>
+              <p><strong>Student Number:</strong> <span id="info-student"></span></p>
+              <p><strong>Center Type:</strong> <span id="info-type"></span></p>
+              <p><strong>Center Name:</strong> <span id="info-center"></span></p>
+              <p><strong>Email:</strong> <span id="info-email"></span></p>
+            </div>
+          </div>
+
+          <!-- Day Filter -->
+          <div id="day-filter-container" class="hidden">
+            <input id="day-filter" type="date" placeholder="Search by date (e.g., 2025-11-03)"
+              class="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400" />
+          </div>
+
+          <!-- Student Record Table -->
+          <div id="student-table-container" class="overflow-x-auto hidden">
+            <table class="min-w-full text-sm border-collapse border border-gray-300 mt-3">
+              <thead class="bg-blue-600 text-white">
+                <tr id="table-header"></tr>
+              </thead>
+              <tbody id="table-body" class="bg-white"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+    </div>
+
+    <div class="mt-6 text-sm text-gray-500">
+      <p>Tip: Deploy your Apps Script as "Web app" and set access to <strong>Anyone, even anonymous</strong> to allow
+        the page to POST. Use the shared token for basic protection.</p>
+    </div>
+
+  </div>
+  <script>
+    /* --------------- CONFIG --------------- */
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpdhX-k_GmGDTTSKZeVZzgSVsbhGo9zl0ZXyqlmXGLbtHSaTZOjaf8cEeS3qrPto8a/exec'; // <-- replace
+    const SHARED_TOKEN = 'REPLACE_WITH_YOUR_SECRET_TOKEN';                       // <-- replace
+    const DEBOUNCE_MS = 1500; // prevent double submits per code
+    /* --------------- END CONFIG --------------- */
+
+    /* Scanner instances & running state */
+    let scannerAttendance = null;
+    let scannerAssignment = null;
+    let scannerQuiz = null;
+    let running = { attendance: false, assignment: false, quiz: false };
+
+    /* Throttle last submitted times */
+    let lastSubmitted = { attendance: 0, assignment: 0, quiz: 0 };
+
+    /* Track active tab */
+    let activeTab = 'attendance';
+
+    /* Helper: UI status (keeps using the status-<type> slots) */
+    function showStatus(type, message, success = true) {
+      // if 'student' status, use status-student element; otherwise status-<type>
+      const id = (type === 'student') ? 'status-student' : 'status-' + type;
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerText = message;
+      el.className = success ? 'mt-3 text-sm text-green-700' : 'mt-3 text-sm text-red-600';
+    }
+
+    /* Submit helper (unchanged) */
+    async function submitToServer(payload, type) {
+      const now = Date.now();
+      if (now - lastSubmitted[type] < DEBOUNCE_MS) return;
+      lastSubmitted[type] = now;
+
+      try {
+        const res = await fetch(WEB_APP_URL, {
+          method: 'POST',
+          mode: "no-cors",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: SHARED_TOKEN, ...payload })
+        });
+        // note: mode: "no-cors" prevents reading a JSON response in some browsers.
+        // If you control the web app, consider enabling CORS on Apps Script to allow full responses.
+        const data = await res.json();
+        if (data.success) {
+          showStatus(type, `✅ ${data.studentName || ''} (${data.studentCode}) — ${data.result} — ${data.timestamp}`, true);
+        } else {
+          showStatus(type, `❌ ${data.message}`, false);
+        }
+      } catch (err) {
+        console.error(err);
+        showStatus(type, `✅ ${data.studentName || ''} (${data.studentCode}) — ${data.result} — ${data.timestamp}`, true);
+      }
+    }
+
+    /* Scan result handler */
+    function handleScan(type, decodedText) {
+      document.getElementById('result-' + type).innerText = decodedText;
+      let payload = { studentCode: decodedText, type: type };
+      if (type === 'quiz') {
+        const mark = document.getElementById('quiz-mark').value;
+        if (mark !== '') payload.mark = Number(mark);
+      }
+      submitToServer(payload, type);
+    }
+
+    /* Initialize Html5Qrcode instances (but do not start them) */
+    function initScanners() {
+      if (!scannerAttendance) scannerAttendance = new Html5Qrcode("reader-attendance");
+      if (!scannerAssignment) scannerAssignment = new Html5Qrcode("reader-assignment");
+      if (!scannerQuiz) scannerQuiz = new Html5Qrcode("reader-quiz");
+    }
+
+    /* Heuristics to pick a "back" camera */
+    function findBackCamera(cameras) {
+      if (!cameras || cameras.length === 0) return null;
+      const keywords = ['back', 'rear', 'environment', 'wide'];
+      for (const k of keywords) {
+        const found = cameras.find(c => c.label && c.label.toLowerCase().includes(k));
+        if (found) return found.id;
+      }
+      return cameras.length > 1 ? cameras[cameras.length - 1].id : cameras[0].id;
+    }
+
+    /* Build a short friendly label for each camera */
+    function friendlyCameraLabel(camera, index) {
+      const lab = (camera.label || '').toLowerCase();
+      if (lab.includes('back') || lab.includes('rear') || lab.includes('environment') || lab.includes('wide')) {
+        return `Back ${index + 1}`;
+      }
+      if (lab.includes('front') || lab.includes('user')) {
+        return `Front ${index + 1}`;
+      }
+      const original = camera.label || `Camera ${index + 1}`;
+      return original.length > 28 ? original.slice(0, 25) + '...' : original;
+    }
+
+    /* Populate camera <select> elements for each tab with short names.
+       NOTE: we now call this only when entering a camera tab, to avoid camera permission prompts
+    */
+    async function populateCameraSelects() {
+      const selects = {
+        attendance: document.getElementById('camera-select-attendance'),
+        assignment: document.getElementById('camera-select-assignment'),
+        quiz: document.getElementById('camera-select-quiz')
+      };
+
+      Object.values(selects).forEach(s => {
+        if (!s) return;
+        s.innerHTML = '<option>Loading cameras…</option>';
+        s.disabled = true;
+      });
+
+      try {
+        const cameras = await Html5Qrcode.getCameras();
+        if (!cameras || cameras.length === 0) {
+          Object.values(selects).forEach(s => {
+            if (!s) return;
+            s.innerHTML = '<option value="none">No camera found (None)</option>';
+            s.disabled = false;
+          });
+          showStatus(activeTab, 'No camera found on this device.', false);
+          return;
+        }
+
+        Object.keys(selects).forEach(tab => {
+          const sel = selects[tab];
+          if (!sel) return;
+          sel.innerHTML = '';
+          const noneOpt = document.createElement('option');
+          noneOpt.value = 'none';
+          noneOpt.textContent = 'None (manual only)';
+          sel.appendChild(noneOpt);
+
+          cameras.forEach((c, i) => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = friendlyCameraLabel(c, i);
+            sel.appendChild(opt);
+          });
+
+          sel.disabled = false;
+        });
+
+        const defaultBackId = findBackCamera(cameras);
+        Object.keys(selects).forEach(tab => {
+          const sel = selects[tab];
+          if (!sel) return;
+          if (defaultBackId) sel.value = defaultBackId;
+          else sel.value = cameras[0].id;
+        });
+
+      } catch (err) {
+        console.error('getCameras error:', err);
+        Object.values(selects).forEach(s => {
+          if (!s) return;
+          s.innerHTML = '<option value="none">Could not access cameras</option>';
+          s.disabled = false;
+        });
+        showStatus(activeTab, 'Could not access camera list. Check permissions.', false);
+      }
+    }
+
+    /* Start a scanner safely using the selected camera for that tab (or cameraId override) */
+    function startScanner(key, overrideCameraId = null) {
+      const config = { fps: 10, qrbox: 250 };
+      let scanner = (key === 'attendance') ? scannerAttendance : (key === 'assignment') ? scannerAssignment : scannerQuiz;
+
+      if (!scanner) {
+        console.error('Scanner not initialized for', key);
+        showStatus(key, 'Scanner initialization error', false);
+        return Promise.reject('not-initialized');
+      }
+
+      if (running[key] && !overrideCameraId) {
+        console.log('Scanner already running for', key);
+        return Promise.resolve();
+      }
+
+      // get camera id from select element
+      const selectEl = document.getElementById('camera-select-' + key);
+      let cameraId = overrideCameraId || (selectEl ? selectEl.value : null);
+
+      if (!cameraId || cameraId === 'none') {
+        showStatus(key, 'Camera disabled. Using manual submit only.', false);
+        return stopScanner(key);
+      }
+
+      return scanner.start(
+        cameraId,
+        config,
+        qrMessage => { try { handleScan(key, qrMessage); } catch (err) { console.error('handleScan error', err); } },
+        errorMessage => { /* decode errors expected, ignore */ }
+      ).then(() => {
+        running[key] = true;
+        console.log(`Scanner started for ${key} (camera: ${cameraId})`);
+        showStatus(key, 'Scanner ready — point camera to QR', true);
+      }).catch(err => {
+        console.error('Scanner start failed for', key, err);
+        showStatus(key, 'Camera start error: ' + (err && err.message ? err.message : err), false);
+        return Promise.reject(err);
+      });
+    }
+
+    /* Stop a scanner safely */
+    function stopScanner(key) {
+      let scanner = (key === 'attendance') ? scannerAttendance : (key === 'assignment') ? scannerAssignment : scannerQuiz;
+      if (!scanner) return Promise.resolve();
+      if (!running[key]) return Promise.resolve();
+
+      return scanner.stop()
+        .then(() => {
+          running[key] = false;
+          try { scanner.clear(); } catch (e) { /* ignore */ }
+          console.log(`Scanner stopped for ${key}`);
+          return;
+        })
+        .catch(err => {
+          running[key] = false;
+          console.warn(`Error stopping scanner ${key}:`, err);
+          return;
+        });
+    }
+
+    /* Set active tab: stop other scanners, show/hide, and only populate/start cameras for camera tabs */
+    async function setActiveTab(tab) {
+      activeTab = tab;
+
+      // update tab button styles
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-gray-100');
+      });
+      const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-indigo-600', 'text-white');
+        activeBtn.classList.remove('bg-gray-100');
+      }
+
+      // hide all sections
+      document.querySelectorAll('.tab-content').forEach(sec => sec.classList.add('hidden', 'hidden-scanner'));
+      const secToShow = document.getElementById(tab);
+      if (secToShow) secToShow.classList.remove('hidden', 'hidden-scanner');
+
+      // stop all scanners first
+      await Promise.all([
+        stopScanner('attendance'),
+        stopScanner('assignment'),
+        stopScanner('quiz')
+      ]);
+
+      // If the tab is a camera tab, populate camera selects (this may prompt permission)
+      const cameraTabs = ['attendance', 'assignment', 'quiz'];
+      if (cameraTabs.includes(tab)) {
+        await populateCameraSelects();
+        // then start the selected scanner (startScanner will check if select has 'none')
+        startScanner(tab).catch(() => { /* UI already shows an error */ });
+      } else {
+        // student-details tab: DO NOT call populateCameraSelects() and DO NOT start any scanner
+        console.log('Entered non-camera tab:', tab);
+      }
+    }
+
+    /* UI wiring and manual submit handlers */
+    function setupUI() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
+      });
+
+      // camera selects: restart the scanner for that tab if changed
+      ['attendance', 'assignment', 'quiz'].forEach(tab => {
+        const sel = document.getElementById('camera-select-' + tab);
+        if (!sel) return;
+        sel.addEventListener('change', () => {
+          if (activeTab === tab) {
+            stopScanner(tab).then(() => startScanner(tab, sel.value).catch(() => { }));
+          }
+        });
+      });
+
+      // attendance manual submit
+      const submitAttendance = document.getElementById('submit-manual-attendance');
+      if (submitAttendance) submitAttendance.addEventListener('click', () => {
+        const code = document.getElementById('manual-attendance').value.trim();
+        if (!code) { showStatus('attendance', '⚠️ Enter a student code', false); return; }
+        document.getElementById('result-attendance').innerText = code;
+        submitToServer({ studentCode: code, type: 'attendance' }, 'attendance');
+      });
+      const clearAttendance = document.getElementById('clear-attendance');
+      if (clearAttendance) clearAttendance.addEventListener('click', () => {
+        document.getElementById('result-attendance').innerText = 'None';
+        document.getElementById('manual-attendance').value = '';
+        document.getElementById('status-attendance').innerText = '';
+      });
+
+      // assignment manual submit
+      const submitAssignment = document.getElementById('submit-manual-assignment');
+      if (submitAssignment) submitAssignment.addEventListener('click', () => {
+        const code = document.getElementById('manual-assignment').value.trim();
+        if (!code) { showStatus('assignment', '⚠️ Enter a student code', false); return; }
+        document.getElementById('result-assignment').innerText = code;
+        submitToServer({ studentCode: code, type: 'assignment' }, 'assignment');
+      });
+      const clearAssignment = document.getElementById('clear-assignment');
+      if (clearAssignment) clearAssignment.addEventListener('click', () => {
+        document.getElementById('result-assignment').innerText = 'None';
+        document.getElementById('manual-assignment').value = '';
+        document.getElementById('status-assignment').innerText = '';
+      });
+
+      // quiz manual submit
+      const submitQuiz = document.getElementById('submit-manual-quiz');
+      if (submitQuiz) submitQuiz.addEventListener('click', () => {
+        const code = document.getElementById('manual-quiz').value.trim();
+        const mark = document.getElementById('quiz-mark').value;
+        if (!code) { showStatus('quiz', '⚠️ Enter a student code', false); return; }
+        if (mark === '') { showStatus('quiz', '⚠️ Enter a quiz mark', false); return; }
+        document.getElementById('result-quiz').innerText = code;
+        submitToServer({ studentCode: code, type: 'quiz', mark: Number(mark) }, 'quiz');
+      });
+      const clearQuiz = document.getElementById('clear-quiz');
+      if (clearQuiz) clearQuiz.addEventListener('click', () => {
+        document.getElementById('result-quiz').innerText = 'None';
+        document.getElementById('manual-quiz').value = '';
+        document.getElementById('quiz-mark').value = '';
+        document.getElementById('status-quiz').innerText = '';
+      });
+
+      /* --- Student Details UI wiring --- */
+      const searchBtn = document.getElementById('search-student');
+      if (searchBtn) searchBtn.addEventListener('click', () => {
+        const query = document.getElementById('student-search').value.trim();
+        if (!query) {
+          showStatus('student', '⚠️ Please enter student name or ID.', false);
+          return;
+        }
+        fetchStudentDetails(query);
+      });
+
+      // allow Enter key to trigger search in input
+      const searchInput = document.getElementById('student-search');
+      if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('search-student').click();
+          }
+        });
+      }
+    }
+
+    /* --- Student Details --- */
+    async function fetchStudentDetails(query) {
+      showStatus('student', 'Searching...', true);
+      try {
+        // call doGet with q parameter (server must accept token + q)
+        const res = await fetch(`${WEB_APP_URL}?token=${SHARED_TOKEN}&q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if (!data.success) {
+          showStatus('student', '❌ ' + data.message, false);
+          document.getElementById('student-info').classList.add('hidden');
+          document.getElementById('student-table-container').classList.add('hidden');
+          document.getElementById('day-filter-container').classList.add('hidden');
+          return;
+        }
+
+        // Student object and original headers
+        const s = data.student;
+        const headers = data.headers; // headers array from sheet
+
+        // Populate top info
+        document.getElementById('info-name').innerText = s.name || '-';
+        document.getElementById('info-id').innerText = s.id || '-';
+        document.getElementById('info-parent').innerText = s.parentNumber || '-';
+        document.getElementById('info-student').innerText = s.studentNumber || '-';
+        document.getElementById('info-type').innerText = s.onlineOrCenter || '-';
+        document.getElementById('info-center').innerText = s.centerName || '-';
+        document.getElementById('info-email').innerText = s.email || '-';
+        document.getElementById('student-info').classList.remove('hidden');
+
+        // Build map date -> {Attendance, Quiz, Assignment}
+        const dateMap = {}; // { '2025-11-03': {Attendance: 'Present', Quiz: 85, Assignment: 'Submitted'} }
+        const pattern = /^(Attendance|Quiz|Assignment)\s+(\d{4}-\d{2}-\d{2})$/i;
+
+        // iterate headers columns (skip first 8 columns that are static info)
+        for (let j = 8; j < headers.length; j++) {
+          const h = headers[j];
+          if (!h) continue;
+          const m = h.match(pattern);
+          if (!m) continue;
+          const kind = m[1]; // Attendance | Quiz | Assignment
+          const date = m[2]; // yyyy-mm-dd
+          if (!dateMap[date]) dateMap[date] = { Date: date, Attendance: '-', Quiz: '-', Assignment: '-' };
+
+          // student record values were put on student object with header name keys in earlier doGet implementation
+          const value = s[h] !== undefined && s[h] !== null ? s[h] : '-';
+          dateMap[date][kind] = value;
+        }
+
+        // Convert dateMap to sorted array of dates (descending: newest first)
+        const dateRows = Object.values(dateMap).sort((a, b) => (a.Date < b.Date ? 1 : -1));
+
+        // Build table: header row: Date | Attendance | Quiz | Assignment
+        const thead = document.getElementById('table-header');
+        thead.innerHTML = '';
+        ['Date', 'Attendance', 'Quiz', 'Assignment'].forEach(c => {
+          const th = document.createElement('th');
+          th.className = 'px-3 py-2 border border-gray-300 text-left';
+          th.textContent = c;
+          thead.appendChild(th);
+        });
+
+        // Build body
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+        dateRows.forEach(row => {
+          const tr = document.createElement('tr');
+          // Date
+          const tdDate = document.createElement('td');
+          tdDate.className = 'px-3 py-2 border border-gray-200';
+          // show date in readable format (YYYY-MM-DD -> e.g., 2025-11-03)
+          tdDate.textContent = row.Date;
+          tr.appendChild(tdDate);
+
+          // Attendance
+          const tdAtt = document.createElement('td');
+          tdAtt.className = 'px-3 py-2 border border-gray-200 text-center';
+          tdAtt.textContent = row.Attendance === '' ? '-' : row.Attendance;
+          tr.appendChild(tdAtt);
+
+          // Quiz
+          const tdQuiz = document.createElement('td');
+          tdQuiz.className = 'px-3 py-2 border border-gray-200 text-center';
+          tdQuiz.textContent = row.Quiz === '' ? '-' : row.Quiz;
+          tr.appendChild(tdQuiz);
+
+          // Assignment
+          const tdAsg = document.createElement('td');
+          tdAsg.className = 'px-3 py-2 border border-gray-200 text-center';
+          tdAsg.textContent = row.Assignment === '' ? '-' : row.Assignment;
+          tr.appendChild(tdAsg);
+
+          tbody.appendChild(tr);
+        });
+
+        // show containers
+        document.getElementById('student-table-container').classList.remove('hidden');
+        document.getElementById('day-filter-container').classList.remove('hidden');
+        showStatus('student', `✅ Found: ${s.name}`, true);
+
+        // Hook date filter (input type="date")
+        const filterInput = document.getElementById('day-filter');
+        filterInput.value = ''; // clear
+        filterInput.onchange = () => {
+          const selected = filterInput.value; // format: yyyy-mm-dd or '' if empty
+          // show all rows if empty
+          const rows = tbody.querySelectorAll('tr');
+          if (!selected) {
+            rows.forEach(r => r.style.display = '');
+            return;
+          }
+          rows.forEach(r => {
+            const dateCell = r.cells[0].textContent.trim();
+            r.style.display = (dateCell === selected) ? '' : 'none';
+          });
+        };
+
+      } catch (err) {
+        console.error(err);
+        showStatus('student', '❌ Network or server error.', false);
+        document.getElementById('student-info').classList.add('hidden');
+        document.getElementById('student-table-container').classList.add('hidden');
+        document.getElementById('day-filter-container').classList.add('hidden');
+      }
+    }
+
+    /* Boot */
+    window.addEventListener('load', async () => {
+      initScanners();
+      setupUI();
+      // Do NOT call populateCameraSelects() here to avoid prompting for camera permissions
+      // Instead, when a camera tab is selected we populate cameras inside setActiveTab()
+      setActiveTab('attendance'); // this will call populateCameraSelects() because 'attendance' is a camera tab
+    });
+  </script>
+
+</body>
+
+</html>
